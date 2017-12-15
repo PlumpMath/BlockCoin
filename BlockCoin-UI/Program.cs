@@ -34,7 +34,7 @@ namespace BlockCoin_UI
             Console.WriteLine("Enter server / client to select");
             string type = Console.ReadLine();
 
-            NetworkManager nm = new NetworkManager();
+            
 
 
             Console.ReadLine();
