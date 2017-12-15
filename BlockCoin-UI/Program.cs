@@ -31,11 +31,22 @@ namespace BlockCoin_UI
             Console.WriteLine("Your balance : {0}", wallet.Balance);
 
 
-            Console.WriteLine("Enter server / client to select");
-            string type = Console.ReadLine();
+            Transaction tr = new Transaction(wallet.PublicKey, wallet.PublicKey, 0);
 
-            
+            Network network = new Network();
+            network.PushTransaction(tr);
+            network.PushTransaction(tr); network.PushTransaction(tr);
+            network.PushTransaction(tr);
+            network.PushTransaction(tr);
 
+            Transaction trRec = null;
+
+            while(trRec == null)
+            {
+                trRec = network.PullTransaction();
+            }
+            Console.WriteLine("Transaction Found");
+            Console.WriteLine(trRec.AddressForm);
 
             Console.ReadLine();
         }

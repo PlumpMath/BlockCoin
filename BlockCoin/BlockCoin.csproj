@@ -42,7 +42,7 @@
   <ItemGroup>
     <Compile Include="src\Block\BlockChain.cs" />
     <Compile Include="src\FileIO\IO.cs" />
-    <Compile Include="src\Network\Server.cs" />
+    <Compile Include="src\Network\Network.cs" />
     <Compile Include="src\SHA256\SHA-256.cs" />
     <Compile Include="src\Wallet\Key.cs" />
     <Compile Include="src\Block\Block.cs" />

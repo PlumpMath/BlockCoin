@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BlockCoin
 {
-
+    [System.Serializable]
     public class Key
     {
         public string _Key = "";
