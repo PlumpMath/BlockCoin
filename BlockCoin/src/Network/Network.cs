@@ -10,11 +10,20 @@ namespace BlockCoin
 
 	public class Network
 	{
+		private static Network m_Network = null;
 		public const int PORT = 54545;
 		public const string BROADCAST_IP = "255.255.255.255";
 
 		public UdpClient RECEIVING_CLIENT;
 		public UdpClient SENDING_CLIENT;
+
+		public static Network GetNetwork()
+		{
+			if (m_Network == null)
+				return new Network();
+			else
+				return m_Network;
+		}
 
 		public Network()
 		{
@@ -61,28 +70,28 @@ namespace BlockCoin
 
 		public void PushTransaction(Transaction transaction)
 		{
-            //convert the object to bytes and push to the network
-            using (var ms = new System.IO.MemoryStream())
-            {
-                byte[] data;
-                System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                bf.Serialize(ms, transaction);
-                data = ms.ToArray();
-                SENDING_CLIENT.Send(data, data.Length, new IPEndPoint(IPAddress.Parse(BROADCAST_IP), PORT));
-            }
-        }
+			//convert the object to bytes and push to the network
+			using (var ms = new System.IO.MemoryStream())
+			{
+				byte[] data;
+				System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+				bf.Serialize(ms, transaction);
+				data = ms.ToArray();
+				SENDING_CLIENT.Send(data, data.Length, new IPEndPoint(IPAddress.Parse(BROADCAST_IP), PORT));
+			}
+		}
 
-        public Transaction PullTransaction()
-        {
-            //convert the bytes to an object (pulled byte from the network)
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, PORT);
-            byte[] data = RECEIVING_CLIENT.Receive(ref endPoint);
-            using (var ms = new System.IO.MemoryStream(data))
-            {
-                System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                return (Transaction)bf.Deserialize(ms);
-            }
-                
-        }
-    }
+		public Transaction PullTransaction()
+		{
+			//convert the bytes to an object (pulled byte from the network)
+			IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, PORT);
+			byte[] data = RECEIVING_CLIENT.Receive(ref endPoint);
+			using (var ms = new System.IO.MemoryStream(data))
+			{
+				System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+				return (Transaction)bf.Deserialize(ms);
+			}
+				
+		}
+	}
 }	

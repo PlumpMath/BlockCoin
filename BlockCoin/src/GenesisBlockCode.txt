@@ -1,20 +1,7 @@
-﻿ //construction the genesis block
-            Wallet genesisWallet = new Wallet();
-            genesisWallet.Balance = 1000000;
+﻿//genesis blockchain
+BlockChain bc = new BlockChain();
+Transaction tr = new Transaction(new Key("0x0000000000000000"), wallet.PublicKey, 1000000, 0);
+Block block = new Block(new System.Collections.Generic.List<Transaction>() { tr });
+bc.AddBlock(block);
 
-
-            Wallet wallet = IO.OpenCreateWallet();
-            Console.WriteLine("Your public key : {0}", wallet.PublicKey._Key);
-            Console.WriteLine("Your private key : {0}", wallet.PrivateKey._Key);
-            Console.WriteLine("Your balance : {0}", wallet.Balance);
-
-            Transaction genesisTransaction = new Transaction(genesisWallet.PublicKey, wallet.PublicKey, 1000000);
-            Block genesisBlock = new Block(new System.Collections.Generic.List<Transaction>() {
-                genesisTransaction
-
-                });
-
-            BlockChain bc = new BlockChain();
-            bc.AddBlock(genesisBlock);
-            BlockChain.SerializeBlockChain(bc);
-
+IO.SerializeBlockChain(bc);

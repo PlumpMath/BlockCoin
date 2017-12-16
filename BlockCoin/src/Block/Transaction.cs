@@ -12,19 +12,27 @@ namespace BlockCoin
         public Key AddressForm;
         public Key AddressTo;
         public int Amount;
+        public int AddressFormFinalBalance;
+        public int AddressToFinalBalance;
         public DateTime TransactionDate;
+
+        
 
         public Transaction()
         {
 
         }
 
-        public Transaction(Key addressForm, Key addressTo, int amount)
+        public Transaction(Key addressForm, Key addressTo, int amount, int addFormFinBal)
         {
             this.AddressForm = addressForm;
             this.AddressTo = addressTo;
             this.Amount = amount;
             this.TransactionDate = DateTime.Now;
+            this.AddressFormFinalBalance = addFormFinBal;
+            
+            //calculated when the transaction is veerified by the network
+            this.AddressToFinalBalance = 0;
         }
 
         public override string ToString()

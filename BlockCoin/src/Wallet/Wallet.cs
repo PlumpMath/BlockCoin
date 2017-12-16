@@ -57,12 +57,18 @@ namespace BlockCoin
 
         }
 
-        public void Send(Key publicKey, int amount)
+        public void Send(Key addressTo, int amount)
         {
-            if(Balance >= amount)
+            if (Balance >= amount)
             {
+                //should check the balance but for now follow onward
+            }
+            else
+            {
+                //Balance -= amount;
                 //generate a transaction and pass it to the network to verif
-                Transaction transaction = new Transaction(PublicKey, publicKey, amount);
+                Transaction transaction = new Transaction(PublicKey, addressTo, amount, Balance);
+                Network.GetNetwork().PushTransaction(transaction);
             }
 
         }
