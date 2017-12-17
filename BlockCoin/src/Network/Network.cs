@@ -120,7 +120,7 @@ namespace BlockCoin
                     //send packet length as a 4 byte int first before send the serialized packet
                     await ns.WriteAsync(BitConverter.GetBytes(packetLength), 0, 4);
 
-                    //await ns.WriteAsync(packetData, 4, packetData.Length);
+                    await ns.WriteAsync(packetData, 0, packetLength);
                     client.Close();
 				}
 			}
@@ -145,9 +145,7 @@ namespace BlockCoin
             Console.WriteLine(packetLengthBytes);
             byte[] packetData = new byte[packetLengthBytes];
 
-            //await ns.ReadAsync(packetData, 4, packetLengthBytes); 
-            /*
-            
+            await ns.ReadAsync(packetData, 0, packetLengthBytes); 
 
             using (var ms = new System.IO.MemoryStream(packetData))
 			{
@@ -162,7 +160,7 @@ namespace BlockCoin
 				}
 
 			}
-            */
+            
             client.Close();
 			
 	
