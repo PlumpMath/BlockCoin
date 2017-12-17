@@ -33,20 +33,22 @@ namespace BlockCoin_UI
                 Key sendKey = new Key(@"SlkxqxefYjGNAdUVWnybBMk5kIPpHX8VAY+uRPqSD9WJhA4g/IA1IombKhNC0ernZejdXNfRVz4Zy3o7RlipD8BfySGD1luIwsPaVLB//FS6xEsQdhECwu4DmgyV6gTJOcVCS557YcrMxZneX83nPlofSwpV1DQzBtMXWl7eQco=");
 
                 wallet.Send(sendKey, 1000);
-               
+                wallet.Send(sendKey, 1000);
+                wallet.Send(sendKey, 1000);
+                wallet.Send(sendKey, 1000);
+                wallet.Send(sendKey, 1000);
+
+
+
+
             }
             else
             {
                 //receiving
                 Console.WriteLine("Searching");
-                Transaction trRec = null;
-                while (trRec == null)
-                {
-                    //check for network transactions
-                    trRec = Network.GetNetwork().PullTransaction();
+                //check for network transactions
+                Network.GetNetwork().PullTransaction();
 
-                }
-                Console.WriteLine(trRec.ToString());
             }
             
             Console.ReadLine();
