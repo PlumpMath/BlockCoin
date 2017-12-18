@@ -67,7 +67,7 @@ namespace BlockCoin
             {
                 //Balance -= amount;
                 //generate a transaction and pass it to the network to verif
-                Transaction transaction = new Transaction(PublicKey, addressTo, amount, Balance);
+                Transaction transaction = new Transaction(this, addressTo, amount);
                 Network.GetNetwork().PushTransaction(transaction);
             }
 

@@ -14,25 +14,44 @@ namespace BlockCoin
         public int Amount;
         public int AddressFormFinalBalance;
         public int AddressToFinalBalance;
+        public string TransactionSenderXPubKey;
         public DateTime TransactionDate;
 
-        
+        public string TransactionSignature;
 
         public Transaction()
         {
 
         }
 
-        public Transaction(Key addressForm, Key addressTo, int amount, int addFormFinBal)
+        public Transaction(Wallet wallet, Key addressTo, int amount)
         {
-            this.AddressForm = addressForm;
+            this.AddressForm = wallet.PublicKey;
             this.AddressTo = addressTo;
             this.Amount = amount;
             this.TransactionDate = DateTime.Now;
-            this.AddressFormFinalBalance = addFormFinBal;
+            this.AddressFormFinalBalance = wallet.Balance;
             
             //calculated when the transaction is veerified by the network
             this.AddressToFinalBalance = 0;
+
+            //sign the transaction
+            string xpub_key_hash = Hashing.ComputeHash(string.Format("{0}{1}", wallet.PublicKey, wallet.PrivateKey), Supported_HA.SHA256, null);
+            TransactionSenderXPubKey = xpub_key_hash;
+            Console.WriteLine(xpub_key_hash);
+            //then hash the xpub with the data in the transaction
+            string transaction_data = string.Format("{0}{1}{0}{1}{0}{1}{0}{1}",
+                AddressForm._Key,
+                AddressTo._Key,
+                Amount,
+                AddressFormFinalBalance,
+                AddressToFinalBalance,
+                TransactionSenderXPubKey,
+                TransactionDate
+                );
+
+            TransactionSignature = Hashing.ComputeHash(transaction_data, Supported_HA.SHA256, null);
+            Console.WriteLine(TransactionSignature);
         }
 
         public override string ToString()

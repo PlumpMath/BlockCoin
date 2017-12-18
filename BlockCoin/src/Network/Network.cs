@@ -4,21 +4,29 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 
 namespace BlockCoin
 {
 
 	public class Network
 	{
-		private static Network m_Network = null;
 		private const int PORT = 1723;
-        private const string BROADCAST_IP = "127.0.0.1";
+		private const string BROADCAST_IP = "127.0.0.1";
+		private static Network m_Network = null;
 
-		public static Network GetNetwork()
+		private Thread m_PullingThread;
+
+		public List<Transaction> PendingTransactions = new List<Transaction>(); 
+
+		public static Network GetNetwork(bool startPuller = false)
 		{
 			if (m_Network == null)
 			{
-				m_Network = new Network();
+				m_Network = new Network(startPuller);
+
 				return m_Network;
 
 			}
@@ -27,22 +35,18 @@ namespace BlockCoin
 			return m_Network;
 		}
 
-		public Network()
+		public Network(bool startPuller)
 		{
-
-        }
-
-		public void InitalizeReceiver()
-		{
+			//initiate network puller
+			if (startPuller)
+			{
+				m_PullingThread = new Thread(_StartNetworkPuller);
+				m_PullingThread.Start();
+			}
 
 		}
 
-		public void InitalizeSender()
-		{
-			
-		}
-
-        /*
+		/*
 		public void Send(string message)
 		{
 			if (!string.IsNullOrEmpty(message))
@@ -82,30 +86,70 @@ namespace BlockCoin
 			}
 
 		}
-        */
+		*/
 
-		public async void PushTransaction(Transaction transaction)
+		private async void _StartNetworkPuller()
+		{
+			while(true)
+			{
+				Console.WriteLine("Checking: {0}" , DateTime.Now);
+				TcpListener listener = TcpListener.Create(PORT);
+				listener.Start();
+
+				TcpClient client = await listener.AcceptTcpClientAsync();
+				NetworkStream ns = client.GetStream();
+
+				byte[] packetLength = new byte[4];
+				await ns.ReadAsync(packetLength, 0, 4); // int32
+
+
+				int packetLengthBytes = BitConverter.ToInt32(packetLength, 0);
+				byte[] packetData = new byte[packetLengthBytes];
+
+				await ns.ReadAsync(packetData, 0, packetLengthBytes);
+
+				using (var ms = new System.IO.MemoryStream(packetData))
+				{
+					BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+					Packet pkt = (Packet)bf.Deserialize(ms);
+
+					using (var pktMs = new System.IO.MemoryStream(pkt.Data))
+					{
+						BinaryFormatter bf2 = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+						if (pkt.PacketType == PacketType.Transaction)
+						{
+							//must stop the listener after each
+							listener.Stop();
+							PendingTransactions.Add((Transaction)bf2.Deserialize(pktMs));
+	        			}
+					}
+
+				}
+			}
+		} 
+
+		public async void _PushTransactionAsync(Transaction transaction)
 		{
 			//convert the object to bytes and push to the network
+			TcpClient client = new TcpClient();
 			using (var ms = new System.IO.MemoryStream())
 			{
-                check:
-                TcpClient client = new TcpClient();
-                try
-                {
-                    await client.ConnectAsync(IPAddress.Parse(BROADCAST_IP), PORT);
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    goto check;
 
-                }
-                Console.WriteLine(client.Connected);
-                NetworkStream ns = client.GetStream();
+				
+				try
+				{
+					await client.ConnectAsync(IPAddress.Parse(BROADCAST_IP), PORT);
+				}
+				catch(Exception ex)
+				{
+					Console.WriteLine("Push Connection Error: " + ex.Message);
+					return;
+				}
 
-                byte[] transactionData;
-				System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+				NetworkStream ns = client.GetStream();
+
+				byte[] transactionData;
+				BinaryFormatter bf = new BinaryFormatter();
 				bf.Serialize(ms, transaction);
 				transactionData = ms.ToArray();
 				//build the packet
@@ -113,59 +157,25 @@ namespace BlockCoin
 				{
 					Packet transactionPacket = new Packet(PacketType.Transaction, transactionData);
 					byte[] packetData;
-					System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf2 = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+					BinaryFormatter bf2 = new BinaryFormatter();
 					bf2.Serialize(ms2, transactionPacket);
 					packetData = ms2.ToArray();
-                    int packetLength = packetData.Length;
-                    //send packet length as a 4 byte int first before send the serialized packet
-                    await ns.WriteAsync(BitConverter.GetBytes(packetLength), 0, 4);
+					int packetLength = packetData.Length;
+					//send packet length as a 4 byte int first before send the serialized packet
+					await ns.WriteAsync(BitConverter.GetBytes(packetLength), 0, 4);
 
-                    await ns.WriteAsync(packetData, 0, packetLength);
-                    client.Close();
+					await ns.WriteAsync(packetData, 0, packetLength);
 				}
 			}
+			client.Close();
 		}
 
-		public async void PullTransaction()
+		public void PushTransaction(Transaction transaction)
 		{
-
-            //convert the bytes to an object (pulled byte from the network)
-            // Listen
-            TcpListener listener = TcpListener.Create(PORT);
-            listener.Start();
-            TcpClient client = await listener.AcceptTcpClientAsync();
-                
-            NetworkStream ns = client.GetStream();
-
-            byte[] packetLength = new byte[4];
-            await ns.ReadAsync(packetLength, 0, 4); // int32
-
-
-            int packetLengthBytes = BitConverter.ToInt32(packetLength, 0);
-            Console.WriteLine(packetLengthBytes);
-            byte[] packetData = new byte[packetLengthBytes];
-
-            await ns.ReadAsync(packetData, 0, packetLengthBytes); 
-
-            using (var ms = new System.IO.MemoryStream(packetData))
-			{
-                System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-				Packet pkt = (Packet)bf.Deserialize(ms);
-
-                using (var pktMs = new System.IO.MemoryStream(pkt.Data))
-				{
-                    System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf2 = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-					if (pkt.PacketType == PacketType.Transaction)
-                        Console.WriteLine(((Transaction)bf2.Deserialize(pktMs)).ToString());
-				}
-
-			}
-            
-            client.Close();
-			
-	
-
-				
+			Task.Run(() => _PushTransactionAsync(transaction));
 		}
+
+		
+		
 	}
 }	

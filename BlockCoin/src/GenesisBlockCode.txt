@@ -1,7 +1,10 @@
-﻿//genesis blockchain
+﻿//genesis wallet
+Wallet genWallet = new Wallet();
+genWallet.PublicKey._Key = "0x0000000000000000";
+
 BlockChain bc = new BlockChain();
-Transaction tr = new Transaction(new Key("0x0000000000000000"), wallet.PublicKey, 1000000, 0);
-Block block = new Block(new System.Collections.Generic.List<Transaction>() { tr });
+Transaction genesisTrans = new Transaction(genWallet, wallet.PublicKey, 1000000);
+Block block = new Block(new System.Collections.Generic.List<Transaction>() { genesisTrans });
 bc.AddBlock(block);
 
 IO.SerializeBlockChain(bc);
