@@ -7,7 +7,6 @@ namespace BlockCoin
     [System.Serializable]
     public class Wallet
     {
-        public Key PublicKey;
         public Key PrivateKey;
         public int Balance;
 
@@ -52,11 +51,13 @@ namespace BlockCoin
             //create a private/public key pair and assign
             Random rand = new Random(DateTime.Now.Millisecond);
             PrivateKey = new Key(Hashing.ComputeHash(string.Format("{0}{1}",DateTime.Now.Millisecond, rand.NextDouble()), Supported_HA.SHA256, null));
-            PublicKey = new Key(Hashing.Encrypt(PrivateKey._Key, PrivateKey._Key));
             Balance = 0;
 
         }
-
+        public string ComputePublicKey()
+        {
+            return (Hashing.Encrypt(PrivateKey._Key, PrivateKey._Key));
+        }
         public void Send(Key addressTo, int amount)
         {
             if (Balance >= amount)

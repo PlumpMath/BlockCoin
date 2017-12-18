@@ -25,5 +25,10 @@ namespace BlockCoin
         {
             return _Key.Substring(0, 12) + "...";
         }
+
+        public static explicit operator Key(string v)
+        {
+            return new Key(v);
+        }
     }
 }

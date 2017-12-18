@@ -17,7 +17,8 @@ namespace BlockCoin
         public string TransactionSenderXPubKey;
         public DateTime TransactionDate;
 
-        public string TransactionSignature;
+        public string TransactionSig;
+        public string TransactionSigXPubHashed;
 
         public Transaction()
         {
@@ -26,21 +27,21 @@ namespace BlockCoin
 
         public Transaction(Wallet wallet, Key addressTo, int amount)
         {
-            this.AddressForm = wallet.PublicKey;
+            this.AddressForm = (Key)wallet.ComputePublicKey();
             this.AddressTo = addressTo;
             this.Amount = amount;
             this.TransactionDate = DateTime.Now;
             this.AddressFormFinalBalance = wallet.Balance;
-            
-            //calculated when the transaction is veerified by the network
+
+            //calculated when the transaction is verified by the network
             this.AddressToFinalBalance = 0;
 
             //sign the transaction
-            string xpub_key_hash = Hashing.ComputeHash(string.Format("{0}{1}", wallet.PublicKey, wallet.PrivateKey), Supported_HA.SHA256, null);
+            string xpub_key_hash = Hashing.ComputeHash(string.Format("{0}{1}", wallet.ComputePublicKey(), wallet.PrivateKey), Supported_HA.SHA256, null);
             TransactionSenderXPubKey = xpub_key_hash;
-            Console.WriteLine(xpub_key_hash);
+
             //then hash the xpub with the data in the transaction
-            string transaction_data = string.Format("{0}{1}{0}{1}{0}{1}{0}{1}",
+            string transaction_data = string.Format("{0}{1}{2}{3}{4}{5}{6}",
                 AddressForm._Key,
                 AddressTo._Key,
                 Amount,
@@ -49,9 +50,29 @@ namespace BlockCoin
                 TransactionSenderXPubKey,
                 TransactionDate
                 );
+            TransactionSig = Hashing.ComputeHash(transaction_data, Supported_HA.SHA256, null);
+            TransactionSigXPubHashed = Hashing.ComputeHash(string.Format("{0}{1}", TransactionSig, TransactionSenderXPubKey), Supported_HA.SHA256, null);
+        }
+        public bool Verify()
+        {
+            //gather the transaction data to see if it has been altered
+            //then hash the xpub with the data in the transaction
+            string transaction_data = string.Format("{0}{1}{2}{3}{4}{5}{6}",
+                AddressForm._Key,
+                AddressTo._Key,
+                Amount,
+                AddressFormFinalBalance,
+                AddressToFinalBalance,
+                TransactionSenderXPubKey,
+                TransactionDate
+                );
+            string unverified_signature = Hashing.ComputeHash(transaction_data, Supported_HA.SHA256, null);
 
-            TransactionSignature = Hashing.ComputeHash(transaction_data, Supported_HA.SHA256, null);
-            Console.WriteLine(TransactionSignature);
+            //Verify the current signature with the stored signature
+            if (Hashing.Confirm(string.Format("{0}{1}", unverified_signature, TransactionSenderXPubKey), TransactionSigXPubHashed, Supported_HA.SHA256))
+                return true;
+            else
+                return false;
         }
 
         public override string ToString()

@@ -14,6 +14,5 @@ namespace BlockCoin
         public const int MAX_SUPPLY = 1000000;
         public const string WALLET_PATH = @"wallet.dat";
         public const string BLOCKCHAIN_PATH = @"blockchain.dat";
-
     }
 }

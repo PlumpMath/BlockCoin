@@ -21,10 +21,18 @@ namespace BlockCoin_UI
             Console.WriteLine("\r\n\r\n");
 
             Wallet wallet = IO.OpenCreateWallet();
-            Console.WriteLine("Your public key : {0}", wallet.PublicKey._Key);
             Console.WriteLine("Your private key : {0}", wallet.PrivateKey._Key);
+            Console.WriteLine("Your public key : {0}", wallet.ComputePublicKey());
             Console.WriteLine("Your balance : {0}", wallet.Balance);
 
+            //genesis wallet
+            Wallet genWallet = new Wallet();
+            Transaction genesisTrans = new Transaction(genWallet, (Key)wallet.ComputePublicKey(), 1000000);
+
+            //modifying a transactions xpub key to prove the verify method works
+            //genesisTrans.TransactionSenderXPubKey ="a";
+
+            Console.WriteLine(genesisTrans.Verify());
 
             Console.WriteLine("Push or Pull");
             string input = Console.ReadLine();

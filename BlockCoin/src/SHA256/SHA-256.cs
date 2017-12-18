@@ -19,8 +19,9 @@ namespace BlockCoin
         /// <summary>
         /// Defining constants for our security standard
         /// </summary>
-        private const int Keysize = 256;
-        private const int DerivationIterations = 1000;
+        private const int KEYSIZE = 256;
+        private const int DERIVATIONITERATIONS = 1000;
+        private static readonly byte[] SALT_BYTES = new byte[10] { 55, 8, 55, 12, 52, 1, 55, 32, 16, 8 };
 
         public static string ComputeHash(string plainText, Supported_HA hash, byte[] salt)
         {
@@ -33,12 +34,7 @@ namespace BlockCoin
             }
             else
             {
-                Random r = new Random();
-                int SaltLength = r.Next(minSaltLength, maxSaltLength);
-                saltBytes = new byte[SaltLength];
-                RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
-                rng.GetNonZeroBytes(saltBytes);
-                rng.Dispose();
+                saltBytes = SALT_BYTES;
             }
 
             byte[] plainData = ASCIIEncoding.UTF8.GetBytes(plainText);
@@ -125,12 +121,12 @@ namespace BlockCoin
         {
             // Salt and IV is randomly generated each time, but is preprended to encrypted cipher text
             // so that the same Salt and IV values can be used when decrypting.  
-            var saltStringBytes = Generate256BitsOfRandomEntropy();
+            var saltStringBytes = SALT_BYTES;
             var ivStringBytes = Generate256BitsOfRandomEntropy();
             var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations))
+            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DERIVATIONITERATIONS))
             {
-                var keyBytes = password.GetBytes(Keysize / 8);
+                var keyBytes = password.GetBytes(KEYSIZE / 8);
                 using (var symmetricKey = new RijndaelManaged())
                 {
                     symmetricKey.BlockSize = 256;
@@ -164,15 +160,15 @@ namespace BlockCoin
             // [32 bytes of Salt] + [32 bytes of IV] + [n bytes of CipherText]
             var cipherTextBytesWithSaltAndIv = Convert.FromBase64String(cipherText);
             // Get the saltbytes by extracting the first 32 bytes from the supplied cipherText bytes.
-            var saltStringBytes = cipherTextBytesWithSaltAndIv.Take(Keysize / 8).ToArray();
+            var saltStringBytes = cipherTextBytesWithSaltAndIv.Take(KEYSIZE / 8).ToArray();
             // Get the IV bytes by extracting the next 32 bytes from the supplied cipherText bytes.
-            var ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(Keysize / 8).Take(Keysize / 8).ToArray();
+            var ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(KEYSIZE / 8).Take(KEYSIZE / 8).ToArray();
             // Get the actual cipher text bytes by removing the first 64 bytes from the cipherText string.
-            var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((Keysize / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((Keysize / 8) * 2)).ToArray();
+            var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((KEYSIZE / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((KEYSIZE / 8) * 2)).ToArray();
 
-            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations))
+            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DERIVATIONITERATIONS))
             {
-                var keyBytes = password.GetBytes(Keysize / 8);
+                var keyBytes = password.GetBytes(KEYSIZE / 8);
                 using (var symmetricKey = new RijndaelManaged())
                 {
                     symmetricKey.BlockSize = 256;
@@ -211,15 +207,15 @@ namespace BlockCoin
             byte[] filePlainBytes = File.ReadAllBytes(filePath);
 
             //generate the password from the passPhrase and the salt
-            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations))
+            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DERIVATIONITERATIONS))
             {
                 //convert our pasword to bytes
-                byte[] keyBytes = password.GetBytes(Keysize / 8);
+                byte[] keyBytes = password.GetBytes(KEYSIZE / 8);
 
                 using (var symmetricKey = new RijndaelManaged())
                 {
                     //setup the key
-                    symmetricKey.BlockSize = Keysize;
+                    symmetricKey.BlockSize = KEYSIZE;
                     symmetricKey.Mode = CipherMode.CBC;
                     symmetricKey.Padding = PaddingMode.PKCS7;
 
@@ -265,15 +261,15 @@ namespace BlockCoin
 
             // Get the saltbytes by extracting the first 32 bytes from the supplied cipherText bytes.
             byte[] cipherTextBytesWithSaltAndIv = File.ReadAllBytes(filePath);
-            byte[] saltStringBytes = cipherTextBytesWithSaltAndIv.Take(Keysize / 8).ToArray();
+            byte[] saltStringBytes = cipherTextBytesWithSaltAndIv.Take(KEYSIZE / 8).ToArray();
             // Get the IV bytes by extracting the next 32 bytes from the supplied cipherText bytes.
-            byte[] ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(Keysize / 8).Take(Keysize / 8).ToArray();
+            byte[] ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(KEYSIZE / 8).Take(KEYSIZE / 8).ToArray();
             // Get the actual cipher text bytes by removing the first 64 bytes from the cipherText string.
-            byte[] cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((Keysize / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((Keysize / 8) * 2)).ToArray();
+            byte[] cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((KEYSIZE / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((KEYSIZE / 8) * 2)).ToArray();
 
-            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations))
+            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DERIVATIONITERATIONS))
             {
-                byte[] keyBytes = password.GetBytes(Keysize / 8);
+                byte[] keyBytes = password.GetBytes(KEYSIZE / 8);
                 using (RijndaelManaged symmetricKey = new RijndaelManaged())
                 {
                     symmetricKey.BlockSize = 256;
